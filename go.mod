@@ -35,13 +35,13 @@ require (
 	github.com/go-ldap/ldap/v3 v3.4.11
 	github.com/go-openapi/loads v0.23.2
 	github.com/go-sql-driver/mysql v1.9.2
-	github.com/gobwas/ws v1.4.0
+	github.com/gobwas/ws v1.5.0
 	github.com/golang-jwt/jwt/v4 v4.5.2
 	github.com/gomodule/redigo v1.9.2
 	github.com/google/uuid v1.6.0
 	github.com/inconshreveable/mousetrap v1.1.0
 	github.com/json-iterator/go v1.1.12
-	github.com/klauspost/compress v1.18.7
+	github.com/klauspost/compress v1.20.5
 	github.com/klauspost/cpuid/v2 v2.2.10
 	github.com/klauspost/filepathx v1.1.1
 	github.com/klauspost/pgzip v1.2.6
@@ -92,8 +92,8 @@ require (
 	github.com/valyala/bytebufferpool v1.0.0
 	github.com/xdg/scram v1.0.5
 	github.com/zeebo/xxh3 v1.0.2
-	go.etcd.io/etcd/api/v3 v3.5.21
-	go.etcd.io/etcd/client/v3 v3.5.21
+	go.etcd.io/etcd/api/v3 v3.5.36
+	go.etcd.io/etcd/client/v3 v3.5.36
 	go.uber.org/atomic v1.11.0
 	go.uber.org/zap v1.27.1
 	goftp.io/server/v2 v2.0.1
@@ -127,7 +127,7 @@ require (
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/internal/resourcemapping v0.53.0 // indirect
 	github.com/VividCortex/ewma v1.2.0 // indirect
 	github.com/acarl005/stripansi v0.0.0-20180116102854-5a71ef0e047d // indirect
-	github.com/apache/thrift v0.24.0 // indirect
+	github.com/apache/thrift v0.25.0 // indirect
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/charmbracelet/bubbles v0.20.0 // indirect
@@ -177,7 +177,6 @@ require (
 	github.com/go-openapi/validate v0.25.1 // indirect
 	github.com/go-viper/mapstructure/v2 v2.5.0 // indirect
 	github.com/gobwas/httphead v0.1.0 // indirect
-	github.com/gobwas/pool v0.2.1 // indirect
 	github.com/goccy/go-json v0.10.5 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang-jwt/jwt/v5 v5.3.1 // indirect
@@ -261,7 +260,7 @@ require (
 	github.com/vbauerster/mpb/v8 v8.9.3 // indirect
 	github.com/xdg/stringprep v1.0.3 // indirect
 	github.com/yusufpapurcu/wmi v1.2.4 // indirect
-	go.etcd.io/etcd/client/pkg/v3 v3.5.21 // indirect
+	go.etcd.io/etcd/client/pkg/v3 v3.5.36 // indirect
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect
 	go.opentelemetry.io/contrib/detectors/gcp v1.44.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.61.0 // indirect
@@ -280,8 +279,8 @@ require (
 	golang.org/x/text v0.44.0 // indirect
 	golang.org/x/tools v0.52.0 // indirect
 	google.golang.org/genproto v0.0.0-20260217215200-42d3e9bedb6d // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20260526163538-3dc84a4a5aaa // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20260526163538-3dc84a4a5aaa // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20260803160001-6ac0973c030d // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20260803160001-6ac0973c030d // indirect
 	google.golang.org/grpc v1.83.2 // indirect
-	google.golang.org/protobuf v1.36.11 // indirect
+	google.golang.org/protobuf v1.36.12 // indirect
 )

@@ -1,4 +1,7 @@
-FROM golang:1.26-alpine AS build
+# Go version is pinned to an exact patch release: official golang images set
+# GOTOOLCHAIN=local, so the toolchain directive in go.mod is ignored and the
+# image tag alone decides which stdlib (and its CVE fixes) ends up in the binary.
+FROM golang:1.26.11-alpine AS build
 
 ARG TARGETARCH
 ARG RELEASE
@@ -9,10 +12,7 @@ ENV CGO_ENABLED=0
 WORKDIR /build
 
 # Install build dependencies
-RUN apk add -U --no-cache ca-certificates && \
-    apk add -U --no-cache curl && \
-    apk add -U --no-cache bash && \
-    apk add -U --no-cache git
+RUN apk add -U --no-cache ca-certificates git
 
 # Build minio from source (prebuilt binaries are no longer published on dl.min.io)
 ARG COMMIT_ID
@@ -30,15 +30,23 @@ RUN VERSION=$(echo "${RELEASE}" | sed -E 's#RELEASE\.([0-9]+)-([0-9]+)-([0-9]+)T
         -X github.com/minio/minio/cmd.ShortCommitID=$(echo ${COMMIT_ID} | cut -c1-12) \
         -X github.com/minio/minio/cmd.GOPATH=${GOPATH}"
 
-# Build mc client from source
-RUN GOTOOLCHAIN=auto GOOS=linux GOARCH=${TARGETARCH} go install -trimpath -ldflags "-s -w" github.com/minio/mc@latest && \
-    if [ -f /go/bin/linux_${TARGETARCH}/mc ]; then mv /go/bin/linux_${TARGETARCH}/mc /go/bin/mc; fi
+# Build mc client from source at a pinned version. mc is no longer maintained
+# upstream and its go.mod pins vulnerable dependencies, so `go install mc@latest`
+# would ship them. Bump the vulnerable modules to the same versions minio uses.
+ARG MC_VERSION=v0.0.0-20251106162529-77f82e18b540
+ARG MC_DEP_UPGRADES="golang.org/x/crypto@v0.59.0 golang.org/x/net@v0.62.0 golang.org/x/sys@v0.50.0 golang.org/x/text@v0.44.0 google.golang.org/grpc@v1.83.2 github.com/klauspost/compress@v1.20.5 github.com/prometheus/prometheus@v0.311.3 go.etcd.io/etcd/api/v3@v3.5.36 go.etcd.io/etcd/client/pkg/v3@v3.5.36 go.etcd.io/etcd/client/v3@v3.5.36"
+RUN cd /tmp && go mod download github.com/minio/mc@${MC_VERSION} && \
+    cp -R "$(go list -m -f '{{.Dir}}' github.com/minio/mc@${MC_VERSION})" /build/mc && \
+    chmod -R u+w /build/mc && cd /build/mc && \
+    go get ${MC_DEP_UPGRADES} && go mod tidy && \
+    GOOS=linux GOARCH=${TARGETARCH} go build -trimpath -ldflags "-s -w" -o /go/bin/mc . && \
+    mkdir -p /rootfs/data
 
-COPY dockerscripts/download-static-curl.sh /build/download-static-curl
-RUN chmod +x /build/download-static-curl && \
-    /build/download-static-curl
-
-FROM registry.access.redhat.com/ubi9/ubi-micro:latest
+# Runtime image: minio and mc are fully static (CGO_ENABLED=0), so they need no
+# OS userland. Distroless static carries only CA certs, tzdata and passwd files,
+# which removes the unfixable glibc/ncurses/pcre2/... CVEs of the UBI base.
+# There is no shell in this image.
+FROM gcr.io/distroless/static-debian13:nonroot@sha256:8ce6dd87e9823c5b48dcfb2c8604714ccb351ce59607327bcc4957448da279b5
 
 ARG RELEASE
 
@@ -59,19 +67,22 @@ ENV MINIO_ACCESS_KEY_FILE=access_key \
     MINIO_CONFIG_ENV_FILE=config.env \
     MC_CONFIG_DIR=/tmp/.mc
 
-RUN chmod -R 777 /usr/bin
+# The *_FILE variables above are relative paths that minio resolves against the
+# working directory. Distroless nonroot defaults to /home/nonroot (mode 0700),
+# so any other uid (e.g. a Kubernetes runAsUser) gets EACCES instead of ENOENT
+# and minio aborts with "Invalid credentials". Use / like the upstream image.
+WORKDIR /
 
-COPY --from=build /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
-COPY --from=build /go/bin/minio* /usr/bin/
-COPY --from=build /go/bin/mc* /usr/bin/
-COPY --from=build /go/bin/curl* /usr/bin/
+COPY --from=build --chmod=0755 /go/bin/minio /go/bin/mc /usr/bin/
+COPY --from=build --chown=65532:65532 /rootfs/data /data
 
 COPY CREDITS /licenses/CREDITS
 COPY LICENSE /licenses/LICENSE
-COPY dockerscripts/docker-entrypoint.sh /usr/bin/docker-entrypoint.sh
 
 EXPOSE 9000
 VOLUME ["/data"]
 
-ENTRYPOINT ["/usr/bin/docker-entrypoint.sh"]
-CMD ["minio"]
+# Same invocation as the upstream image minus the shell wrapper:
+#   docker run <image> server /data
+ENTRYPOINT ["/usr/bin/minio"]
+CMD ["server", "/data"]
