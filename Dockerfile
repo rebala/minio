@@ -1,18 +1,18 @@
-FROM minio/minio:latest
+FROM alpine:3.20
 
-ARG TARGETARCH
-ARG RELEASE
+RUN apk add --no-cache ca-certificates && \
+    addgroup -S minio && adduser -S minio -G minio
 
-RUN chmod -R 777 /usr/bin
+# Copy the binary from builder
+COPY ./minio /usr/local/bin/minio
 
-COPY ./minio-${TARGETARCH}.${RELEASE} /usr/bin/minio
-COPY ./minio-${TARGETARCH}.${RELEASE}.minisig /usr/bin/minio.minisig
-COPY ./minio-${TARGETARCH}.${RELEASE}.sha256sum /usr/bin/minio.sha256sum
+USER minio
+WORKDIR /home/minio
 
 COPY dockerscripts/docker-entrypoint.sh /usr/bin/docker-entrypoint.sh
-
 ENTRYPOINT ["/usr/bin/docker-entrypoint.sh"]
 
+EXPOSE 9000 9001
 VOLUME ["/data"]
 
 CMD ["minio"]
